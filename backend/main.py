@@ -27,12 +27,17 @@ vector_store = None
 async def startup_event():
     global models, vector_store
     import src.rag
-    print(f"DEBUG: src.rag file: {src.rag.__file__}")
-    models["embedding"] = get_embeddings_model()
-    models["llm"] = get_llm_model()
+    from src.config import MODEL_PROVIDER
     
-    # Try loading existing vector store
-    loaded_vs = load_vector_store(models["embedding"])
+    print(f"DEBUG: src.rag file: {src.rag.__file__}")
+    print(f"Using MODEL_PROVIDER: {MODEL_PROVIDER}")
+    
+    # Initialize models with the configured provider
+    models["embedding"] = get_embeddings_model(provider=MODEL_PROVIDER)
+    models["llm"] = get_llm_model(provider=MODEL_PROVIDER)
+    
+    # Try loading existing vector store for the current provider
+    loaded_vs = load_vector_store(models["embedding"], provider=MODEL_PROVIDER)
     if loaded_vs:
         vector_store = loaded_vs
         print("Vector store loaded successfully.")
@@ -45,6 +50,8 @@ class QueryRequest(BaseModel):
 @app.post("/ingest")
 async def ingest_document(file: UploadFile = File(...)):
     global vector_store
+    from src.config import MODEL_PROVIDER
+    
     try:
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as buffer:
@@ -58,7 +65,7 @@ async def ingest_document(file: UploadFile = File(...)):
 
         print(f"Created {len(chunks)} chunks from PDF.")
         vector_store = create_vector_store(chunks, models["embedding"])
-        save_vector_store(vector_store)
+        save_vector_store(vector_store, provider=MODEL_PROVIDER)
         print("Vector store created and saved successfully.")
         
         return {"message": "Document ingested and vector store created successfully.", "chunks": len(chunks)}
@@ -69,12 +76,14 @@ async def ingest_document(file: UploadFile = File(...)):
 @app.post("/chat")
 async def chat(request: QueryRequest):
     global vector_store
+    from src.config import MODEL_PROVIDER
+    
     if not vector_store:
         raise HTTPException(status_code=400, detail="No documents ingested yet.")
     
     try:
         # Always get a fresh LLM instance to avoid global state issues
-        llm = get_llm_model()
+        llm = get_llm_model(provider=MODEL_PROVIDER)
         print(f"DEBUG: Instantiated LLM: {type(llm)}")
         
         chain = create_rag_chain(vector_store, llm)

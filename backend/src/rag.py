@@ -1,7 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-from langchain.chains import create_retrieval_chain
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)

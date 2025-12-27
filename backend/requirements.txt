@@ -1,8 +1,13 @@
 fastapi
 uvicorn
-langchain==0.3.0
-langchain-community==0.3.0
+langchain>=0.3.0
+langchain-community>=0.3.0
 langchain-ollama
 faiss-cpu
 pymupdf
 python-multipart
+numpy>=1.26.0
+python-dotenv
+# OpenAI dependencies (install only if using OpenAI provider)
+openai
+langchain-openai
