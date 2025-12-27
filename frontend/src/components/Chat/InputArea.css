@@ -5,6 +5,38 @@
     align-items: center;
 }
 
+/* Documents Button Container */
+.documents-button-container {
+    flex-shrink: 0;
+}
+
+.documents-access-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+    white-space: nowrap;
+    height: 48px;
+}
+
+.documents-access-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.documents-access-btn:active {
+    transform: translateY(0);
+}
+
 .input-container {
     display: flex;
     gap: 1rem;
@@ -55,4 +87,41 @@
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .input-wrapper {
+        padding: 0.75rem 1rem;
+    }
+
+    .documents-access-btn span {
+        display: none;
+    }
+
+    .documents-access-btn {
+        padding: 0.75rem;
+        height: 44px;
+    }
+
+    .input-container input {
+        padding: 0.875rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .input-container button {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .input-wrapper {
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .documents-access-btn {
+        min-width: 44px;
+    }
 }

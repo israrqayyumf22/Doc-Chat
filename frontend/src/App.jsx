@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, FileText } from 'lucide-react';
 import ChatWindow from './components/Chat/ChatWindow';
 import InputArea from './components/Chat/InputArea';
 import Sidebar from './components/Sidebar/Sidebar';
+import DocumentsModal from './components/Modals/DocumentsModal';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -18,6 +19,7 @@ const AppContent = () => {
   const [messages, setMessages] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
 
   // Load active chat messages when ID changes
   useEffect(() => {
@@ -115,9 +117,18 @@ const AppContent = () => {
 
         <div className="chat-area-wrapper">
           <ChatWindow messages={messages} />
-          <InputArea messages={messages} setMessages={updateCurrentChatMessages} setIsUploading={setIsUploading} />
+          <InputArea 
+            messages={messages} 
+            setMessages={updateCurrentChatMessages} 
+            onOpenDocuments={() => setIsDocumentsModalOpen(true)}
+          />
         </div>
       </main>
+
+      <DocumentsModal 
+        isOpen={isDocumentsModalOpen}
+        onClose={() => setIsDocumentsModalOpen(false)}
+      />
     </div>
   );
 };

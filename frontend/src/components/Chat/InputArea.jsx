@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, FileText } from 'lucide-react';
 import { chatWithBot } from '../../api';
-import UploadSection from './UploadSection';
 import './InputArea.css';
 
-const InputArea = ({ messages, setMessages, setIsUploading }) => {
+const InputArea = ({ messages, setMessages, onOpenDocuments }) => {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -43,7 +42,16 @@ const InputArea = ({ messages, setMessages, setIsUploading }) => {
 
     return (
         <div className="input-wrapper">
-            <UploadSection setIsUploading={setIsUploading} />
+            <div className="documents-button-container">
+                <button 
+                    className="documents-access-btn" 
+                    onClick={onOpenDocuments}
+                    title="Manage Documents"
+                >
+                    <FileText size={20} />
+                    <span>Documents</span>
+                </button>
+            </div>
             <form className="input-container" onSubmit={handleSend}>
                 <input
                     type="text"

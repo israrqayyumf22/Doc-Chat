@@ -19,10 +19,21 @@ The backend uses the following components:
 ### RAG Pipeline Flow:
 
 ```
-PDF Upload → Text Extraction → Chunking → Embeddings → FAISS Vector Store
-                                                              ↓
-User Query → Embedding → Similarity Search → Context Retrieval → LLM → Answer
+PDF Upload → Text Extraction → Chunking → Metadata Tagging → Embeddings → FAISS Vector Store
+                                              ↓                                    ↓
+                                    (source + uploaded_at)              (Add to existing store)
+                                                                                   ↓
+User Query → Embedding → Similarity Search (ALL docs) → Context Retrieval → LLM → Answer
+
+Document Deletion → Filter by (source + uploaded_at) → Rebuild Vector Store → Updated Index
 ```
+
+**Key Features:**
+- ✅ **Multi-Document Support**: Upload unlimited PDFs, query across all simultaneously
+- ✅ **Incremental Addition**: New documents are added to existing vector store (not replaced)
+- ✅ **Unique Tracking**: Each document tagged with `source` (filename) + `uploaded_at` (timestamp)
+- ✅ **Selective Deletion**: Delete specific documents without affecting others
+- ✅ **Provider Separation**: Separate vector stores for Ollama and OpenAI
 
 ## 🤖 Models Used
 
@@ -67,7 +78,7 @@ The system supports two model providers that you can switch between in [`src/con
 ## 🔌 API Endpoints
 
 ### 1. **POST /ingest**
-Uploads and processes a PDF document into the vector store.
+Uploads and processes a PDF document, adding it to the vector store.
 
 **Request:**
 ```bash
@@ -79,23 +90,32 @@ curl -X POST "http://localhost:8000/ingest" \
 **Response:**
 ```json
 {
-  "message": "Document ingested and vector store created successfully.",
-  "chunks": 42
+  "message": "Document ingested and added to vector store successfully.",
+  "chunks": 42,
+  "uploaded_at": "2025-12-28T10:30:45.123456"
 }
 ```
 
 **What it does:**
 - Accepts PDF file upload
 - Extracts text from PDF
-- Splits text into manageable chunks
+- Splits text into manageable chunks (~1000 chars each with 200 char overlap)
+- Adds metadata to each chunk: `source` (filename) and `uploaded_at` (timestamp)
 - Creates embeddings for each chunk
-- Stores embeddings in FAISS vector store
-- Saves vector store to disk
+- **Adds** chunks to existing vector store (doesn't replace existing documents!)
+- Saves updated vector store to disk
+- Returns upload timestamp for future document identification
+
+**✨ Multi-Document Support:**
+- Upload multiple PDFs and query across all of them!
+- Each document is tracked with unique `source` + `uploaded_at` combination
+- You can upload files with the same name multiple times (each upload gets a unique timestamp)
+- All documents remain searchable until explicitly deleted
 
 ---
 
 ### 2. **POST /chat**
-Asks a question about the ingested documents.
+Asks a question about the ingested documents (searches across ALL uploaded documents).
 
 **Request:**
 ```bash
@@ -126,11 +146,134 @@ curl -X POST "http://localhost:8000/chat" \
 **What it does:**
 - Takes user's question
 - Converts question to embedding
-- Searches for top 3 most relevant chunks from vector store
+- Searches for top 3 most relevant chunks from **all documents** in the vector store
 - Sends question + context to LLM
 - Returns generated answer with source context
 
 ---
+
+### 3. **GET /documents**
+Retrieves a list of all uploaded documents with metadata.
+
+**Request:**
+```bash
+curl -X GET "http://localhost:8000/documents"
+```
+
+**Response:**
+```json
+{
+  "documents": [
+    {
+      "filename": "research_paper.pdf",
+      "name": "research_paper",
+      "extension": "pdf",
+      "size": 2457600,
+      "sizeFormatted": "2.3 MB",
+      "uploadedOn": "2025-12-28T10:30:45.123456",
+      "uploadedOnFormatted": "Dec 28, 2025 10:30 AM"
+    },
+    {
+      "filename": "report.pdf",
+      "name": "report",
+      "extension": "pdf",
+      "size": 1048576,
+      "sizeFormatted": "1.0 MB",
+      "uploadedOn": "2025-12-28T09:15:30.654321",
+      "uploadedOnFormatted": "Dec 28, 2025 09:15 AM"
+    }
+  ],
+  "provider": "openai",
+  "count": 2
+}
+```
+
+**What it does:**
+- Lists all documents uploaded for the current provider
+- Returns file metadata (name, size, upload timestamp)
+- Sorted by upload date (newest first)
+
+---
+
+### 4. **GET /documents/{filename}**
+Downloads or views a specific document.
+
+**Request:**
+```bash
+curl -X GET "http://localhost:8000/documents/research_paper.pdf"
+```
+
+**Response:**
+- Returns the PDF file for download/viewing
+
+**What it does:**
+- Retrieves the physical PDF file
+- Includes security check to prevent directory traversal attacks
+- Returns 404 if document not found
+
+---
+
+### 5. **DELETE /documents/{filename}**
+Deletes a document and its embeddings from the vector store.
+
+**Request:**
+```bash
+curl -X DELETE "http://localhost:8000/documents/research_paper.pdf?uploaded_at=2025-12-28T10:30:45.123456"
+```
+
+**Query Parameters:**
+- `uploaded_at` (required): ISO format timestamp from when the file was uploaded
+
+**Response:**
+```json
+{
+  "message": "Document 'research_paper.pdf' and its embeddings deleted successfully.",
+  "filename": "research_paper.pdf"
+}
+```
+
+**What it does:**
+- Deletes the physical PDF file from uploads directory
+- Removes all embeddings/chunks associated with that specific document
+- Uses **both** `filename` AND `uploaded_at` to uniquely identify the document
+- Rebuilds vector store without the deleted document's chunks
+- If no documents remain, deletes the entire vector store
+
+**🔒 Deletion Strategy - Unique Document Identification:**
+
+The system uses a **compound key** (`source` + `uploaded_at`) to uniquely identify documents:
+
+1. **Why this matters:** You can upload files with the same name multiple times
+   - Upload `report.pdf` at 10:00 AM → `{source: "report.pdf", uploaded_at: "2025-12-28T10:00:00"}`
+   - Upload `report.pdf` again at 11:00 AM → `{source: "report.pdf", uploaded_at: "2025-12-28T11:00:00"}`
+   - Both versions coexist in the vector store!
+
+2. **How deletion works:**
+   - Loads the existing vector store
+   - Extracts all document chunks with their metadata
+   - Filters out chunks where **BOTH** `metadata['source'] == filename` **AND** `metadata['uploaded_at'] == timestamp`
+   - Rebuilds vector store with remaining chunks (no re-embedding needed - vectors already computed!)
+   - Deletes the physical file
+
+3. **Why rebuild instead of direct deletion:**
+   - FAISS doesn't support deleting individual vectors by ID
+   - We filter chunks and create a new index structure from existing embeddings
+   - Fast operation since embeddings are already computed
+   - Ensures clean index without fragmentation
+
+**Example Scenario:**
+```bash
+# Upload same file twice
+POST /ingest (report.pdf at 10:00) → uploaded_at: "2025-12-28T10:00:00"
+POST /ingest (report.pdf at 11:00) → uploaded_at: "2025-12-28T11:00:00"
+
+# Delete only the first version
+DELETE /documents/report.pdf?uploaded_at=2025-12-28T10:00:00
+✅ First version deleted, second version still searchable!
+
+# Query still works with the remaining version
+POST /chat → Returns answers from the 11:00 version
+```
 
 ## 🚀 Setup Instructions
 
@@ -300,10 +443,19 @@ backend/
     ├── __init__.py
     ├── config.py                # Configuration (model provider, paths)
     ├── models.py                # LLM and embedding model initialization
-    ├── document_loader.py       # PDF loading and text chunking
-    ├── vector_store.py          # FAISS vector store management
+    ├── document_loader.py       # PDF loading, chunking, and metadata tagging
+    ├── vector_store.py          # FAISS operations (create, add, delete, save, load)
     └── rag.py                   # RAG chain implementation
 ```
+
+**Key Files:**
+- **`document_loader.py`**: Extracts text from PDFs, splits into chunks, adds `source` + `uploaded_at` metadata
+- **`vector_store.py`**: 
+  - `create_vector_store()` - Creates new FAISS index
+  - `add_documents_to_store()` - Adds documents to existing index (multi-document support!)
+  - `delete_document_from_store()` - Filters and rebuilds index without specified document
+  - `save_vector_store()` / `load_vector_store()` - Persistence
+- **`main.py`**: API endpoints for ingest, chat, list documents, get document, delete document
 
 ---
 
@@ -403,19 +555,46 @@ def get_upload_dir(provider=None):
 
 1. **PDF Upload**: User uploads a PDF via `/ingest` endpoint
 2. **Text Extraction**: PyMuPDF extracts text from all pages
-3. **Text Chunking**: Text is split into overlapping chunks (~500 chars each)
-4. **Embedding Generation**: Each chunk is converted to a vector using `nomic-embed-text`
-5. **Vector Storage**: Embeddings stored in FAISS for fast retrieval
-6. **Persistence**: Vector store saved to disk for future use
+3. **Text Chunking**: Text is split into overlapping chunks (1000 chars with 200 char overlap)
+4. **Metadata Tagging**: Each chunk receives metadata:
+   - `source`: The filename (e.g., `"research_paper.pdf"`)
+   - `uploaded_at`: ISO timestamp (e.g., `"2025-12-28T10:30:45.123456"`)
+   - `page`: Original page number
+   - `start_index`: Character position in document
+5. **Embedding Generation**: Each chunk is converted to a vector using the embedding model
+6. **Vector Storage**: Embeddings **added** to existing FAISS vector store (incremental, not replacement!)
+7. **Persistence**: Updated vector store saved to disk for future use
+
+**🔑 Unique Document Identification:**
+- Each chunk contains `{"source": "filename.pdf", "uploaded_at": "2025-12-28T10:30:45.123456"}`
+- This compound key allows multiple uploads of the same filename
+- Example: Upload `report.pdf` twice → both versions coexist with different timestamps
 
 ### Question Answering Process:
 
 1. **Query Embedding**: User's question is converted to a vector
-2. **Similarity Search**: FAISS finds top 3 most similar document chunks
-3. **Context Building**: Retrieved chunks are formatted as context
+2. **Similarity Search**: FAISS finds top 3 most similar chunks **across ALL uploaded documents**
+3. **Context Building**: Retrieved chunks are formatted as context (may come from different documents!)
 4. **Prompt Construction**: System prompt + context + user question combined
-5. **LLM Generation**: `llama3.2:1b` generates answer based on context
+5. **LLM Generation**: LLM generates answer based on retrieved context
 6. **Response**: Answer and source context returned to user
+
+### Document Deletion Process:
+
+1. **Identify Target**: Uses `filename` + `uploaded_at` to uniquely identify the document
+2. **Load Vector Store**: Retrieves current FAISS index with all documents
+3. **Extract Chunks**: Gets all document chunks with their metadata from the vector store
+4. **Filter**: Removes chunks where `metadata['source'] == filename` AND `metadata['uploaded_at'] == timestamp`
+5. **Rebuild Index**: Creates new FAISS index from remaining chunks (embeddings already computed, so fast!)
+6. **Delete File**: Removes physical PDF from uploads directory
+7. **Save**: Persists updated vector store (or deletes if no documents remain)
+
+**Why Rebuild?**
+- FAISS doesn't support direct deletion of vectors by ID
+- We filter chunks and reconstruct the index structure
+- Embeddings are already computed (no re-embedding needed!)
+- Results in clean, unfragmented index
+- Fast operation even with many documents
 
 ---
 
