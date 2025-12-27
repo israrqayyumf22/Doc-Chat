@@ -97,7 +97,7 @@ npm run dev
 ---
 
 ##  Usage
-1. Open the frontend URL in your browser.
+1. Open the frontend URL in any of your Preffered browser.
 2. Use the **Upload** feature to ingest a PDF file.
 3. Wait for the ingestion to complete (check backend logs for "Vector store created" message).
 4. Type your question in the chat interface and receive answers based on the document's content.
