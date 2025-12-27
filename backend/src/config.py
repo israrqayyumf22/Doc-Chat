@@ -24,10 +24,12 @@ EMBEDDING_MODEL = OLLAMA_EMBEDDING_MODEL
 # Paths
 VECTOR_STORE_PATH_OLLAMA = "vector_store_index_ollama"
 VECTOR_STORE_PATH_OPENAI = "vector_store_index_openai"
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR_OLLAMA = "uploads_ollama"
+UPLOAD_DIR_OPENAI = "uploads_openai"
 
-# Legacy path variable (for backwards compatibility)
+# Legacy path variables (for backwards compatibility)
 VECTOR_STORE_PATH = VECTOR_STORE_PATH_OLLAMA
+UPLOAD_DIR = UPLOAD_DIR_OLLAMA
 
 def get_vector_store_path(provider=None):
     """Get the appropriate vector store path based on provider."""
@@ -41,5 +43,18 @@ def get_vector_store_path(provider=None):
     else:
         return VECTOR_STORE_PATH_OLLAMA  # Default to Ollama
 
+def get_upload_dir(provider=None):
+    """Get the appropriate upload directory based on provider."""
+    if provider is None:
+        provider = MODEL_PROVIDER
+    
+    if provider.lower() == "openai":
+        return UPLOAD_DIR_OPENAI
+    elif provider.lower() == "ollama":
+        return UPLOAD_DIR_OLLAMA
+    else:
+        return UPLOAD_DIR_OLLAMA  # Default to Ollama
+
 # Create directories if they don't exist
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(UPLOAD_DIR_OLLAMA, exist_ok=True)
+os.makedirs(UPLOAD_DIR_OPENAI, exist_ok=True)

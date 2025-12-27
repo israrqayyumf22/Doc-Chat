@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 import os
 import shutil
-from src.config import UPLOAD_DIR
+from src.config import get_upload_dir
 from src.document_loader import load_and_split_pdf
 from src.models import get_embeddings_model, get_llm_model
 from src.vector_store import create_vector_store, save_vector_store, load_vector_store
@@ -53,11 +53,14 @@ async def ingest_document(file: UploadFile = File(...)):
     from src.config import MODEL_PROVIDER
     
     try:
-        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        # Get provider-specific upload directory
+        upload_dir = get_upload_dir(provider=MODEL_PROVIDER)
+        file_path = os.path.join(upload_dir, file.filename)
+        
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        print(f"Ingesting file: {file.filename}")
+        print(f"Ingesting file: {file.filename} (provider: {MODEL_PROVIDER})")
         chunks = load_and_split_pdf(file_path)
         
         if not chunks:

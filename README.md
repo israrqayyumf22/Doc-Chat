@@ -27,7 +27,10 @@ Here is a preview of the chat interface:
 ## Key Features
 - **PDF Ingestion**: Upload and process PDF documents automatically.
 - **Vector Search**: Efficient similarity search using FAISS.
+- **Flexible Model Providers**: Switch between Ollama (local, free) and OpenAI (cloud-based) with a simple configuration change.
+- **Provider-Specific Isolation**: Separate upload directories and vector stores for each provider - switch seamlessly without re-ingesting documents.
 - **Local LLM Inference**: Uses Ollama (Llama 3.2) for privacy and offline capabilities.
+- **OpenAI Integration**: Optional cloud-based models for higher quality responses.
 - **Interactive Chat Interface**: A clean, responsive React-based frontend for querying documents.
 
 ---
@@ -38,7 +41,9 @@ Here is a preview of the chat interface:
 - **Framework**: FastAPI
 - **LLM Orchestration**: LangChain
 - **Vector Store**: FAISS
-- **Model Provider**: Ollama (Llama 3.2)
+- **Model Providers**: 
+  - **Ollama** (default): Llama 3.2 + Nomic Embed Text (100% free, local)
+  - **OpenAI** (optional): GPT-3.5/GPT-4 + OpenAI Embeddings (cloud-based, requires API key)
 - **PDF Processing**: PyMuPDF
 
 ### Frontend
@@ -53,9 +58,11 @@ Here is a preview of the chat interface:
 ### Prerequisites
 - **Python** (3.10 or higher)
 - **Node.js** (v16 or higher)
-- **Ollama**: Installed and running locally.
-    - Pull the model: `ollama pull llama3.2`
-    - Pull the embedding model: `ollama pull nomic-embed-text` (or whichever embedding model is configured)
+- **Choose your model provider**:
+  - **Option 1 - Ollama** (recommended for local/free): Install Ollama locally
+    - Pull the LLM model: `ollama pull llama3.2:1b`
+    - Pull the embedding model: `ollama pull nomic-embed-text`
+  - **Option 2 - OpenAI** (cloud-based): Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 
 ### 1. Backend Setup
 
@@ -75,10 +82,34 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Configure model provider (optional)
+# Edit backend/src/config.py and set MODEL_PROVIDER to "ollama" or "openai"
+# For OpenAI: Create a .env file in backend/ with your API key:
+# OPENAI_API_KEY=sk-proj-your-api-key-here
+
 # Start the backend server
 python main.py
 ```
 *The backend will start at `http://localhost:8000`*
+
+**📌 Model Provider Configuration:**
+- By default, the system uses **Ollama** (local, free)
+- To switch to **OpenAI**:
+  1. Open `backend/src/config.py`
+  2. Change `MODEL_PROVIDER = "ollama"` to `MODEL_PROVIDER = "openai"`
+  3. Create a `.env` file in the `backend/` directory with your OpenAI API key
+  4. Restart the backend server
+
+**🗂️ Provider-Specific Storage:**
+The system maintains **separate directories** for each provider:
+- **Ollama**: 
+  - Uploaded PDFs: `backend/uploads_ollama/`
+  - Vector store: `backend/vector_store_index_ollama/`
+- **OpenAI**: 
+  - Uploaded PDFs: `backend/uploads_openai/`
+  - Vector store: `backend/vector_store_index_openai/`
+
+This means you can switch between providers without re-uploading documents - each provider's data persists independently!
 
 ### 2. Frontend Setup
 

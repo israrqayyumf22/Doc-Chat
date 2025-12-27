@@ -290,7 +290,8 @@ backend/
 ├── .env                         # Environment variables (API keys) - DO NOT COMMIT
 ├── .env.example                 # Example environment file (safe to commit)
 ├── .gitignore                   # Git ignore rules
-├── uploads/                     # Directory for uploaded PDFs
+├── uploads_ollama/              # Uploaded PDFs for Ollama provider
+├── uploads_openai/              # Uploaded PDFs for OpenAI provider
 ├── vector_store_index_ollama/   # FAISS vector store for Ollama embeddings
 │   └── index.faiss              # Ollama vector index file
 ├── vector_store_index_openai/   # FAISS vector store for OpenAI embeddings
@@ -375,18 +376,24 @@ OPENAI_API_KEY=sk-proj-your-api-key-here
 # Provider-Specific Vector Store Paths
 VECTOR_STORE_PATH_OLLAMA = "vector_store_index_ollama"  # For Ollama embeddings
 VECTOR_STORE_PATH_OPENAI = "vector_store_index_openai"  # For OpenAI embeddings
-UPLOAD_DIR = "uploads"
+
+# Provider-Specific Upload Directories
+UPLOAD_DIR_OLLAMA = "uploads_ollama"  # For Ollama PDF uploads
+UPLOAD_DIR_OPENAI = "uploads_openai"  # For OpenAI PDF uploads
 
 # Automatically selects the correct path based on MODEL_PROVIDER
 def get_vector_store_path(provider=None):
-    # Returns the appropriate path for the current provider
+    # Returns the appropriate vector store path for the current provider
+
+def get_upload_dir(provider=None):
+    # Returns the appropriate upload directory for the current provider
 ```
 
-**Important**: The system now maintains **separate vector stores** for each provider:
-- When using Ollama, documents are stored in `vector_store_index_ollama/`
-- When using OpenAI, documents are stored in `vector_store_index_openai/`
-- You can switch between providers without re-ingesting documents
-- Each provider's vector store persists independently
+**Important**: The system now maintains **complete separation** for each provider:
+- **Upload Directories**: PDFs uploaded with Ollama go to `uploads_ollama/`, PDFs uploaded with OpenAI go to `uploads_openai/`
+- **Vector Stores**: Ollama embeddings stored in `vector_store_index_ollama/`, OpenAI embeddings stored in `vector_store_index_openai/`
+- **Seamless Switching**: You can switch between providers without re-ingesting documents or managing file conflicts
+- **Independent Persistence**: Each provider's uploads and vector stores persist independently
 
 ---
 
@@ -526,20 +533,20 @@ pip install openai langchain-openai
 ```
 
 #### Switching Between Providers
-**Good News**: The system now maintains **separate vector stores** for each provider!
+**Good News**: The system now maintains **complete separation** between providers!
 
-- When you switch `MODEL_PROVIDER` from "ollama" to "openai" (or vice versa), the system automatically loads the correct vector store
+- When you switch `MODEL_PROVIDER` from "ollama" to "openai" (or vice versa), the system automatically uses the correct upload directory and vector store
 - No need to delete or re-ingest documents when switching
-- Each provider has its own directory:
-  - Ollama: `vector_store_index_ollama/`
-  - OpenAI: `vector_store_index_openai/`
+- Each provider has its own dedicated directories:
+  - **Ollama**: `uploads_ollama/` and `vector_store_index_ollama/`
+  - **OpenAI**: `uploads_openai/` and `vector_store_index_openai/`
 
-**First Time Setup**: If you haven't ingested documents for a provider yet, you'll need to upload them once via the `/ingest` endpoint. After that, the vector store persists and you can switch freely.
+**First Time Setup**: If you haven't ingested documents for a provider yet, you'll need to upload them once via the `/ingest` endpoint. After that, both the uploaded PDFs and vector store persist, allowing you to switch freely.
 
 **Example Workflow**:
-1. Set `MODEL_PROVIDER = "ollama"` and ingest documents → saved to `vector_store_index_ollama/`
-2. Switch to `MODEL_PROVIDER = "openai"` and ingest documents → saved to `vector_store_index_openai/`
-3. Now you can switch between providers anytime without re-ingesting!
+1. Set `MODEL_PROVIDER = "ollama"` and upload a document → saved to `uploads_ollama/` with embeddings in `vector_store_index_ollama/`
+2. Switch to `MODEL_PROVIDER = "openai"` and upload a document → saved to `uploads_openai/` with embeddings in `vector_store_index_openai/`
+3. Now you can switch between providers anytime - each has its own complete ecosystem!
 
 ---
 
