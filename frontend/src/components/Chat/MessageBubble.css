@@ -1,0 +1,80 @@
+.message-container {
+    display: flex;
+    gap: 1rem;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease;
+}
+
+.message-container.user {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.message-container.ai {
+    margin-right: auto;
+}
+
+.avatar {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.ai .avatar {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.bubble {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    /* Ensure long words break */
+    min-width: 0;
+    /* Important for flex items to shrink */
+}
+
+.user .bubble {
+    background: var(--user-bubble);
+    color: white;
+    border-top-right-radius: 2px;
+}
+
+.ai .bubble {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-top-left-radius: 2px;
+}
+
+/* Markdown Styles inside Bubble */
+.bubble p {
+    margin-bottom: 0.8em;
+}
+
+.bubble p:last-child {
+    margin-bottom: 0;
+}
+
+.bubble ul,
+.bubble ol {
+    margin-left: 1.5em;
+    margin-bottom: 0.8em;
+}
+
+.bubble code {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+}

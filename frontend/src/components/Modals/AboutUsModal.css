@@ -1,0 +1,205 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+    background-color: var(--surface-color);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    color: var(--text-primary);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 1rem;
+}
+
+
+.university-info h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #ef4444;
+    /* NUTECH Red-ish color or keep primary */
+}
+
+.university-info {
+    text-align: center;
+}
+
+/* Override red for dark mode if needed, but red is brand color usually. layout says red. */
+[data-theme='dark'] .university-info h2 {
+    color: #f87171;
+}
+
+.university-info p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.project-title-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.project-title-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.project-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.detail-item {
+    display: flex;
+    font-size: 0.95rem;
+}
+
+.detail-item .label {
+    font-weight: 600;
+    width: 140px;
+    flex-shrink: 0;
+    color: var(--text-primary);
+}
+
+.detail-item .value {
+    color: var(--text-secondary);
+}
+
+.group-members-section {
+    margin-bottom: 2rem;
+}
+
+.group-members-section h4 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.members-table {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.member-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 2fr;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.member-row:last-child {
+    border-bottom: none;
+}
+
+.member-row.header {
+    background-color: var(--surface-hover);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.member-row span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.member-row.header span {
+    color: var(--text-primary);
+}
+
+.supervisor-section {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .modal-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .project-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .members-table {
+        overflow-x: auto;
+    }
+
+    .member-row {
+        min-width: 500px;
+        /* Ensure table doesn't squish too much */
+    }
+}

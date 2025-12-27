@@ -1,0 +1,137 @@
+.upload-container {
+    width: auto;
+}
+
+.upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--surface-hover);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    min-width: 140px;
+    justify-content: center;
+}
+
+.upload-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.upload-btn.uploading {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.upload-btn.success {
+    border-color: #10b981;
+    color: #10b981;
+    border-style: solid;
+}
+
+.upload-btn.error {
+    border-color: #ef4444;
+    color: #ef4444;
+    border-style: solid;
+}
+
+.file-input-hidden {
+    display: none;
+}
+
+/* File Preview Card */
+.file-preview-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.file-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--surface-hover);
+    color: var(--primary-color);
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.status-icon {
+    flex-shrink: 0;
+}
+
+.status-icon.success {
+    color: #10b981;
+}
+
+.status-icon.error {
+    color: #ef4444;
+}
+
+.clear-btn {
+    background: transparent;
+    border: none;
+    padding: 4px;
+    margin-left: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+}
+
+.clear-btn:hover {
+    background: var(--surface-hover);
+    color: #ef4444;
+}
+
+.icon {
+    width: 18px;
+    height: 18px;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

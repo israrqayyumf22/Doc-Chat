@@ -1,0 +1,96 @@
+/* App Container Layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--bg-color);
+  width: 100%;
+  overflow: hidden;
+  /* Prevent body scroll */
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  /* Ensure children handle scroll */
+  min-width: 0;
+  /* Prevent flex overflow */
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-color);
+  height: 72px;
+  /* Fixed height for header */
+}
+
+.header-title h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  background: var(--primary-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.menu-btn {
+  display: none;
+  /* Hidden on desktop */
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 250px;
+}
+
+/* Chat Area */
+.chat-area-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* Subtract header height */
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+  overflow: hidden;
+  /* Ensure ChatWindow scrolls, not this wrapper */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .menu-btn {
+    display: block;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .chat-area-wrapper {
+    padding: 0;
+  }
+}
